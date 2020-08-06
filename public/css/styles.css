@@ -3,6 +3,7 @@
     font-family: 'Caveat', cursive;;
 }
 
+/* ------------------------------------------------------------------------------------------------------------------------ */
 
 /* Header */
 header{
@@ -72,6 +73,12 @@ header{
     text-decoration: none;
     display: block;
   }
+
+  .border-bottom-hr{
+      border: solid 1px #565466;
+      width: 55px;
+      margin: auto;
+  }
   
   /* Change color of dropdown links on hover */
   .dropdown-content a:hover {background-color: #f6f6f6; color: #8785a2;}
@@ -83,6 +90,8 @@ header{
   .dropdown:hover .dropbtn {background-color: #ffe2e2;}
 
 
+/* ------------------------------------------------------------------------------------------------------------------------ */
+
 
 /* Body List */
 .list-body{
@@ -92,19 +101,31 @@ header{
     width: 100%;
 }
 
-.delete-add{
+.delete, .add{
     background-color: #ffc7c7;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     border-radius: 5px;
     padding: 2px;
+  
+}
+
+.delete{
     position: absolute;
     top: -10px;
-    right: -10px;
+    left: -20px;
     display: flex;
     align-items: center;
 }
 
-.delete-add button{
+.add{
+    position: absolute;
+    top: -10px;
+    right: -20px;
+    display: flex;
+    align-items: center;
+}
+
+.delete button, .add button{
     color: white;
     border: none;
     background-color: #ffc7c7;
@@ -112,20 +133,25 @@ header{
     cursor: pointer;
 }
 
-.delete-add button:focus{
+.delete button:focus, .add button:focus{
     outline: none;
 }
 
-.delete-add button .fa-plus-circle{
-    margin-left: 10px;
-}
-
-.delete-add .button-show{
+.add .button-show{
     display: none;
 }
 
-.delete-add input{
+.add input{
     display: none;
+    border: none;
+    border-radius: 5px;
+    width: 150px;
+    padding: 2px;
+    font-size: 1.5rem;
+}
+
+.add input:focus{
+    outline: none;
 }
 
 
@@ -229,6 +255,7 @@ header{
     outline: none;
 }
 
+/* ------------------------------------------------------------------------------------------------------------------------ */
 
 /* Footer */
 footer{

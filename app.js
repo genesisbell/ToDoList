@@ -11,7 +11,7 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser:true, useUnifiedTopology:true});
+mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false});
 
 const options = {month: "long", day: "numeric"}
 const day = new Date().toLocaleDateString("en-US", options)
@@ -36,7 +36,7 @@ app.get("/", function(req, res){
         if(!err){
             Item.find({}, function(err, items){
                 if(!err){
-                    res.render("list", {listTitle : day, items: items, lists: foundLists}) 
+                    res.render("list", {listTitle : day, items: items, lists: foundLists, listId : "0"}) 
                 }else{
                     console.log(err)
                 }
@@ -53,30 +53,54 @@ app.get("/", function(req, res){
 //Add new Item
 app.post("/", function(req, res){
     const item = req.body.newItem;
+    const listId = req.body.listIdAddBtn;
 
-    if(item !== ""){
-        const newItemDoc = new Item({
-            name: item
-        })
+    const newItemDoc = new Item({
+        name: item
+    })
+
+    if(listId === "0"){
         newItemDoc.save();
-        
+        res.redirect("/")
+    }else{
+        List.findOne({_id : listId}, function(err, foundList){
+            foundList.items.push(newItemDoc);
+            foundList.save();
+            res.redirect("/lists/" + listId);
+        })
     }
 
-    res.redirect("/")
+    
+   
     
 })
 
 //Delete item
 app.post("/delete", function(req, res){
     const idItem = req.body.checkbox
-    Item.findByIdAndDelete(idItem, function(err, foundItem){
-        if(!err){
-            console.log("Sucessfully deleted items" + foundItem)
-        }else{
-            console.log(err)
-        }
-    })
-    res.redirect("/")
+    const listId = req.body.listIdDeleteItem;
+
+
+    if(listId === "0"){
+        Item.findByIdAndDelete(idItem, function(err, foundItem){
+            if(err){
+             console.log(err)
+            }else{
+                console.log(foundItem)
+            }
+        })
+        res.redirect("/")
+    }else{
+        List.findByIdAndUpdate(listId, {$pull: {items : {_id: idItem}}}, function(err, foundList){
+            if(!err){
+                res.redirect("/lists/" + listId);
+            }else{
+                console.log(err);
+            }
+        })
+    }
+
+
 })
 
 //Load list
@@ -95,8 +119,19 @@ app.post("/addList", function(req, res){
 
 //Delete List
 app.post("/deleteList", function(req, res){
-    const itemToDeleteId = req.body.input;
-    console.log(itemToDeleteId);
+    const listToDeleteId = req.body.deleteListBtn;
+
+    if(listToDeleteId === "0"){
+        console.log("You can not delete main day list, choose another list to delete");
+    }else{
+        List.findByIdAndDelete(listToDeleteId, function(err, deletedList){
+            if(err){
+                console.log(err)
+            }else{
+                console.log("List deleted: " + deletedList)
+            }
+        })
+    }
     res.redirect("/")
 
 })
@@ -108,24 +143,10 @@ app.get("/lists/:listId", function(req, res){
     List.find({}, function(err, foundLists){
         if(!err){
             List.findById(listId, function(err, foundNameList){
-                res.render("list", {listTitle : foundNameList.name, items: foundNameList.items, lists: foundLists})
+                res.render("list", {listTitle : foundNameList.name, items: foundNameList.items, lists: foundLists, listId : foundNameList._id})
             })
         }
     })
-    
-
-
-
-    // const listId = req.params.listId;
-    // console.log(mongoose.Types.ObjectId.isValid(listId))
-
-    // List.findById({listId}, function(err, foundList){
-    //     if(!err){
-    //         res.render("list", {listTitle : foundList.name, items: foundList.items})
-    //     }else{
-    //         console.log(err)
-    //     }
-    // })
 
 })
 

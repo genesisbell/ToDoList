@@ -1,20 +1,24 @@
 <%- include("partials/header") -%> 
 
-
 <div class="list-body">
-  
+    
+<!-- delete this  -->
+<li><%= listId %></li> 
+<!-- delete this  -->
 
     <div class="list-title">
-        <div class="delete-add">
+        <div class="delete">
             <form action="/deleteList" method="POST">
-                <button type="submit"><i class="fas fa-trash-alt"></i></button>
+                <button type="submit" name="deleteListBtn" value="<%= listId %>"><i class="fas fa-trash-alt"></i></button>
             </form>
+        </div>
+
+        <div class="add">
             <form action="/addList" method="POST">
                 <button class="reply" onClick="$('.reply').toggle()" type="button"><i class="fas fa-plus-circle"></i></button>
                 <button class="reply button-show" type="submit"><i class="fas fa-plus-circle"></i></button>
-                <input type="text" class="reply" name="addNewList" placeholder="New List Name">
+                <input type="text" class="reply" name="addNewList" placeholder="New List Name" autocomplete="off" maxlength="16" required spellcheck="false">
             </form>
-         
         </div>
         <p><%= listTitle %></p>
     </div>
@@ -27,13 +31,14 @@
                         <input type="checkbox" name="checkbox" onChange="this.form.submit()" value=<%= item._id %> >
                         <p><%= item.name %> </p>
                     </div>
+                    <input type="hidden" name="listIdDeleteItem" value="<%= listId %>">
                 </form>
             <% }) %>
         </div>
 
         <form class="add-item-input" action="/" method="POST">
-            <input type="text" name="newItem" placeholder="Add Item" autocomplete="off" autofocus>
-            <button type="submit" name="listName">+</i></button>
+            <input type="text" name="newItem" placeholder="Add Item" autocomplete="off" autofocus required spellcheck="false">
+            <button type="submit" name="listIdAddBtn" value="<%= listId %>">+</i></button>
         </form>
     </div>
 </div>

@@ -24,11 +24,14 @@
             <div class="dropdown-content">
                 <a href="/">Today</a>
                 <% lists.forEach(list => { %>
-                    <a href="/lists/<%= list._id %>"><%= list.name %></a>
+                    <hr class="border-bottom-hr">
+                    <a href="/lists/<%= list._id %>"><%= list.name %></a>                    
                 <% }); %>
 
             </div>
         </div>
+        
+        
     </header>
 
 </head>
