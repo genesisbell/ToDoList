@@ -3,6 +3,7 @@
     font-family: 'Caveat', cursive;;
 }
 
+
 /* Header */
 header{
     text-align: center;
@@ -32,7 +33,10 @@ header{
     border: none;
     border-radius: 5%;
     box-shadow: 5px 5px 15px -5px rgba(0, 0, 0, 0.3);
-    
+  }
+
+  .dropbtn:focus{
+      outline: none;
   }
   
   /* The container <div> - needed to position the dropdown content */
@@ -49,7 +53,17 @@ header{
     min-width: 100px;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
+    max-height: 200px;
+    overflow: auto;
+    border-radius: 5px;
   }
+
+    /*Custon scrollbar*/
+    .dropdown:hover ::-webkit-scrollbar-thumb{
+        background: #ffc7c7;
+        border-radius: 5px;
+    }
+
   
   /* Links inside the dropdown */
   .dropdown-content a {
@@ -76,8 +90,44 @@ header{
     top: 100px;
     bottom: 60px;
     width: 100%;
-
 }
+
+.delete-add{
+    background-color: #ffc7c7;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    padding: 2px;
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    display: flex;
+    align-items: center;
+}
+
+.delete-add button{
+    color: white;
+    border: none;
+    background-color: #ffc7c7;
+    margin: 0;
+    cursor: pointer;
+}
+
+.delete-add button:focus{
+    outline: none;
+}
+
+.delete-add button .fa-plus-circle{
+    margin-left: 10px;
+}
+
+.delete-add .button-show{
+    display: none;
+}
+
+.delete-add input{
+    display: none;
+}
+
 
 .list-title{
     border: none;
@@ -88,11 +138,15 @@ header{
     margin-top: 20px;
     margin-bottom: 20px;
     background-color: #8785a2;
-    text-align: center;
-    line-height: 50px;
-    color: #f6f6f6;
-    font-size: 3rem;
     box-shadow: 5px 5px 15px -5px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.list-title p{
+    line-height: 50px;
+    color: #f6f6f6;    
+    text-align: center;
+    font-size: 3rem;
 }
 
 .list-content{
@@ -107,24 +161,33 @@ header{
 }
 
 .item-list{
-    height: 90%;
+    height: 87%;
     overflow: auto;
     font-size: 1.5rem;
+    padding: 10px 20px 0;
 }
 
     /*Custon scrollbar*/
-    /* width */
     ::-webkit-scrollbar {
         width: 10px;
         height: 10px;
     }
 
-    /* Handle on hover */
-    ::-webkit-scrollbar-thumb:hover {
+    .list-content:hover ::-webkit-scrollbar-thumb{
         background: #8785a2;
+        border-radius: 5px;
     }
 
+.item{
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #ffc7c7;
+}
 
+.item p{
+    margin: 0;
+    padding-left: 20px;
+}
 
 .add-item-input{
     text-align: center;
@@ -156,10 +219,14 @@ header{
     text-align: center;
     line-height: 30px;
     font-size: 1.5rem;
-    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
 }
 .add-item-input button:hover{
     background-color: #b4b2d8;
+}
+
+.add-item-input button:focus{
+    outline: none;
 }
 
 

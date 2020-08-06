@@ -1,0 +1,41 @@
+<%- include("partials/header") -%> 
+
+
+<div class="list-body">
+  
+
+    <div class="list-title">
+        <div class="delete-add">
+            <form action="/deleteList" method="POST">
+                <button type="submit"><i class="fas fa-trash-alt"></i></button>
+            </form>
+            <form action="/addList" method="POST">
+                <button class="reply" onClick="$('.reply').toggle()" type="button"><i class="fas fa-plus-circle"></i></button>
+                <button class="reply button-show" type="submit"><i class="fas fa-plus-circle"></i></button>
+                <input type="text" class="reply" name="addNewList" placeholder="New List Name">
+            </form>
+         
+        </div>
+        <p><%= listTitle %></p>
+    </div>
+    
+    <div class="list-content">
+        <div class="item-list">
+            <% items.forEach((item) =>{ %>
+                <form action="/delete" method="POST">
+                    <div class="item">
+                        <input type="checkbox" name="checkbox" onChange="this.form.submit()" value=<%= item._id %> >
+                        <p><%= item.name %> </p>
+                    </div>
+                </form>
+            <% }) %>
+        </div>
+
+        <form class="add-item-input" action="/" method="POST">
+            <input type="text" name="newItem" placeholder="Add Item" autocomplete="off" autofocus>
+            <button type="submit" name="listName">+</i></button>
+        </form>
+    </div>
+</div>
+
+<%- include("partials/footer") -%> 

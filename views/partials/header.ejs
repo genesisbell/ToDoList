@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To Do List</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/6767b0ab9c.js" crossorigin="anonymous"></script>
+
+    <!-- CSS stylesheet -->
+    <link rel="stylesheet" href="/css/styles.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    
+    <header>
+        <h1 class="quote">"What you can measure you can control"</h1>
+    
+        <div class="dropdown">
+            <button class="dropbtn">Lists</button>
+            <div class="dropdown-content">
+                <a href="/">Today</a>
+                <% lists.forEach(list => { %>
+                    <a href="/lists/<%= list._id %>"><%= list.name %></a>
+                <% }); %>
+
+            </div>
+        </div>
+    </header>
+
+</head>
+<body>
+
+
+
+
