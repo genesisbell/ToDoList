@@ -1,0 +1,25 @@
+<%- include("partials/header") -%> 
+
+<h1 class="sign-register-title" >Sign In</h1>
+
+<div class="sign-register-box">
+    <div class="localsr">
+        <form action="/login" method="POST">
+    
+            <input type="email" name="email" id="" placeholder="Enter your email">
+            
+            <input type="password" name="password" id="" placeholder="Enter your password">
+            <button type="submit">Login</button>
+        </form>
+    
+    </div>
+
+    <div class="gfsr">
+        <p>google sign in</p>
+        <p>facebook sign in</p>
+
+    </div>
+    
+</div>
+
+<%- include("partials/footer") -%> 

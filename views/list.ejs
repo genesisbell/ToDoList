@@ -1,15 +1,36 @@
 <%- include("partials/header") -%> 
 
-<div class="list-body">
+<body style="background-image: url(/images/<%=bgimg%>.png)">
+
+    <header>
+        <h1 class="quote">"What you can measure you can control"</h1>
     
-<!-- delete this  -->
-<li><%= listId %></li> 
-<!-- delete this  -->
+        <div class="dropdown">
+            <button class="dropbtn">Lists</button>
+            <div class="dropdown-content">
+                <a href="/main">Today</a>
+                <% lists.forEach(list => { %>
+                    <hr class="border-bottom-hr">
+                    <a href="/user/<%= userId %>/lists/<%= list._id %>"><%= list.name %></a>                    
+                <% }); %>
+
+            </div>
+        </div>
+    </header>
+
+
+<li name="userId"><%= userId %></li>
+<li name="listId"><%= listId %></li>
+
+
+
+<div class="list-body">
 
     <div class="list-title">
         <div class="delete">
             <form action="/deleteList" method="POST">
                 <button type="submit" name="deleteListBtn" value="<%= listId %>"><i class="fas fa-trash-alt"></i></button>
+                <input type="hidden" name="userIdDeleteList" value="<%= userId %>">
             </form>
         </div>
 
@@ -18,6 +39,7 @@
                 <button class="reply" onClick="$('.reply').toggle()" type="button"><i class="fas fa-plus-circle"></i></button>
                 <button class="reply button-show" type="submit"><i class="fas fa-plus-circle"></i></button>
                 <input type="text" class="reply" name="addNewList" placeholder="New List Name" autocomplete="off" maxlength="16" required spellcheck="false">
+                <input type="hidden" name="userIdAddList" value="<%= userId %>">
             </form>
         </div>
         <p><%= listTitle %></p>
@@ -26,19 +48,21 @@
     <div class="list-content">
         <div class="item-list">
             <% items.forEach((item) =>{ %>
-                <form action="/delete" method="POST">
+                <form action="/deleteItem" method="POST">
                     <div class="item">
                         <input type="checkbox" name="checkbox" onChange="this.form.submit()" value=<%= item._id %> >
                         <p><%= item.name %> </p>
                     </div>
                     <input type="hidden" name="listIdDeleteItem" value="<%= listId %>">
+                    <input type="hidden" name="userIdDeleteItem" value="<%= userId %>">
                 </form>
             <% }) %>
         </div>
 
-        <form class="add-item-input" action="/" method="POST">
+        <form class="add-item-input" action="/addItem" method="POST">
             <input type="text" name="newItem" placeholder="Add Item" autocomplete="off" autofocus required spellcheck="false">
-            <button type="submit" name="listIdAddBtn" value="<%= listId %>">+</i></button>
+            <button type="submit" name="listIdAddBtn" value="<%= listId %>">+</button>
+            <input type="hidden" name="userIdAddBtn" value="<%= userId %>">
         </form>
     </div>
 </div>
