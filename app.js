@@ -1,8 +1,13 @@
+require("dotenv").config();
 const express = require("express");
 const ejs = require("ejs");
 const mongoose = require("mongoose")
 const bodyParser = require("body-parser");
 const _ = require("lodash");
+const session = require("express-session");
+const passport = require("passport");
+const passportLocalMongoose = require("passport-local-mongoose");
+const LocalStrategy = require("passport-local").Strategy; /////////////////////
 
 const app = express();
 
@@ -11,31 +16,56 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static(__dirname + "/public"));
 
-mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false});
+app.use(session({
+    secret: "This is my little little secret.",
+    resave: false,
+    saveUninitialized: true,
+}));
 
-const options = {month: "long", day: "numeric"}
-const day = new Date().toLocaleDateString("en-US", options)
+app.use(passport.initialize());
+app.use(passport.session());
+
+mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false});
+mongoose.set('useCreateIndex', true);
+
+const options = {month: "long", day: "numeric"};
+const day = new Date().toLocaleDateString("en-US", options);
 const images = 25;
 
-const itemsSchema = {
+const itemsSchema = new mongoose.Schema({
     name: String
-}
+});
 
-const listsSchema = {
+const listsSchema = new mongoose.Schema({
     name: String,
     items: [itemsSchema],
     bgimg: Number
-}
+});
 
-const usersSchema = {
+const usersSchema = new mongoose.Schema({
     email: String,
-    password: String,
+    //password: String,
     lists: [listsSchema]
-}
+});
 
-const User = mongoose.model("User", usersSchema);
+//usersSchema.plugin(passportLocalMongoose, {usernameField : "email"});
+usersSchema.plugin(passportLocalMongoose);
+
 const Item = mongoose.model("Item", itemsSchema);
 const List = mongoose.model("List", listsSchema);
+const User = mongoose.model("User", usersSchema);
+
+//passport.use(User.createStrategy(), {passReqToCallBack: true});
+// passport.use(new LocalStrategy({
+//     usernameField: "email",
+//     passwordField: "password",
+//     passReqToCallback: true,
+// }, function(req, email, password, done){
+//     const lists = req.body.lists;
+// }))
+passport.use(new LocalStrategy(User.authenticate())); ////
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 /* --------------- Inicial Items ------------------------- */
 const item1 = new Item({
@@ -69,68 +99,134 @@ app.get("/register", function(req, res){
     res.render("register")
 })
 
-//Login user
-app.post("/login", function(req, res){
-   const email = req.body.email;
-   const password = req.body.password;
-
-    User.findOne({email: email}, function(err, foundUser){
-        if(!err){
-            if(foundUser.password === password){
-                res.redirect("/user/login/" + foundUser._id);
-            }
-        }else{
-            console.log(err)
-        }
-    })
-})
-
 //Register User
 app.post("/register", function(req, res){
     const email = req.body.email;
     const password = req.body.password;
 
     const newList = new List({
+        _id: mongoose.Types.ObjectId("000000000000000000000000"),
         name: day,
-        items: defaultItems
+        items: defaultItems,
+        bgimg: 1
     })
 
-    const newUser = new User({
-        email: email,
-        password: password,
-        lists: newList
-    });
-
-    newUser.save(function(err){
+    User.register({email: email, lists: newList}, password, function(err, user){
         if(!err){
-            res.redirect("/user/register/" + newUser._id);
+            passport.authenticate("local")(req, res, function(){
+                res.redirect("/user/register/" + user._id);
+            });
+        }else{
+            console.log(err);
+            res.redirect("/register");
+        }
+    })
+
+
+
+    // bcrypt.hash(password, saltRounds, function(err, hash){
+    //     if(!err){
+    //         const newList = new List({
+    //             _id: mongoose.Types.ObjectId("000000000000000000000000"),
+    //             name: day,
+    //             items: defaultItems,
+    //             bgimg: 1
+    //         })
+        
+    //         const newUser = new User({
+    //             email: email,
+    //             password: hash,
+    //             lists: newList
+    //         });
+        
+    //         newUser.save(function(err){
+    //             if(!err){
+    //                 res.redirect("/user/register/" + newUser._id);
+    //             }else{
+    //                 console.log(err)
+    //             }
+    //         })
+    //     }else{
+    //         console.log(err);
+    //     }
+
+    // });
+});
+
+//Login user
+app.post("/login", function(req, res){
+    const email = req.body.email;
+    const password = req.body.password;
+
+    const user = new User({
+        email: email,
+        password: password
+        //lists: [{name: day, items: [], bgimg:1}]
+    })
+
+    req.login(user, function(err){
+        if(!err){
+            console.log(user);
+            console.log(user.lists+"-------------------------------------");
+            console.log(req.user);
+            passport.authenticate("local")(req, res, function(){
+                res.redirect("/user/login/" + user._id);
+            })
         }else{
             console.log(err)
         }
     })
-})
 
+
+//    const email = req.body.email;
+//    const password = req.body.password;
+
+//     User.findOne({email: email}, function(err, foundUser){
+//         if(!err){
+//             bcrypt.compare(password, foundUser.password, function(err, result){
+//                 if(!err){
+//                     if(result){
+//                         res.redirect("/user/login/" + foundUser._id);
+//                     }else{
+//                         console.log("Wrong password")
+//                     }                    
+//                 }else{
+//                     console.log(err);
+//                 }                
+//             });
+//         }else{
+//             console.log("Email not found")
+//             console.log(err)
+            
+//         }
+//     })
+})
 
 //Load default items for registered user
 app.get("/user/register/:userId", function(req, res){
-    const userId = req.params.userId;
+    if(req.isAuthenticated()){
+        const userId = req.params.userId;
 
-    User.findById(userId, function(err, foundUser){
-        if(!err){
+        User.findById(userId, function(err, foundUser){
+            if(!err){
+    
+                res.render("list", {
+                    userId : foundUser._id,
+                    listTitle : day, 
+                    items: foundUser.lists[0].items, 
+                    lists: foundUser.lists, 
+                    listId : foundUser.lists[0]._id,
+                    bgimg : 1
+                });
+    
+            }else{
+                console.log(err);
+            }
+        })
+    }else{
+        res.redirect("/");
+    }
 
-            res.render("list", {
-                userId : foundUser._id,
-                listTitle : day, 
-                items: foundUser.lists[0].items, 
-                lists: foundUser.lists, 
-                listId : foundUser.lists[0]._id,
-                bgimg : 1
-            });
-
-        }else{
-            console.log(err);
-        }
-    })
 })
 
 //Load items for logim user
@@ -138,7 +234,11 @@ app.get("/user/login/:userId", function(req, res){
     const userId = req.params.userId;
 
     User.findById(userId, function(err, foundUser){
+        console.log("-------reached here-----")
         if(!err){
+            console.log(foundUser);
+            console.log("--------------Reached user/login")
+            
             if(foundUser.lists[0].items === undefined){
                 foundUser.lists[0].items = [];
 
@@ -257,18 +357,28 @@ app.get("/user/:userId/lists/:listId", function(req, res){
 app.post("/deleteList", function(req, res){
     const userId = req.body.userIdDeleteList;
     const listId = req.body.deleteListBtn;
-    
-    User.findByIdAndUpdate(userId, {$pull: {lists: {_id: listId}}}, function(err, foundUser){
-        if(!err){
-            console.log("Succesfully deleted list!");
-            res.redirect("/user/login/" + foundUser._id);
-        }else{
-            console.log(err)
-        }
-    })
 
+    if(listId === "000000000000000000000000"){
+        console.log("You can not delete main list!");
+        res.redirect("/user/login/" + userId);
+
+    }else{
+        User.findByIdAndUpdate(userId, {$pull: {lists: {_id: listId}}}, function(err, foundUser){
+            if(!err){
+                console.log("Succesfully deleted list!");
+                res.redirect("/user/login/" + foundUser._id);
+            }else{
+                console.log(err)
+            }
+        })
+    }
 })
 
 
+//logout user
+app.post("/logout", function(req, res){
+    req.logout();
+    res.redirect("/")
+})
 
 app.listen("3000", () => console.log("Server open on port 3000"))

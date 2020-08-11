@@ -7,6 +7,10 @@ body{
     background-color: #fff;
 }
 
+button:focus, input:focus{
+    outline: none;
+}
+
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
 /* Header */
@@ -17,33 +21,46 @@ header{
     height: 100px;
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(20, 1fr);
+    grid-template-columns: repeat(12, 1fr);
     place-items: center;
-    text-align: center
 }
 
 .quote{
-    grid-column: 3 / span 15;
     display: inline;
+    grid-column: 4 / span 6;
     font-size: min(5vw, 2.5rem);
     letter-spacing: .25rem;
 }
+
+.logout-btn{
+    background-color: #8785a2;
+    padding: 0px;
+    height: 37px;
+    width: 50px;
+    font-size: 1.5rem;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 5px 5px 15px -5px rgba(0, 0, 0, 0.3);
+}
+
+.logout-btn:hover{
+    background-color: #b3b1d8;
+}
+
 
 /* Dropdown Button */
 .dropbtn {
     background-color: #ffc7c7;
     color: #8785a2;
-    padding: 10px;
+    padding: 0px;
+    height: 40px;
+    width: 70px;    
     font-size: 1.5rem;
     border: none;
-    border-radius: 5%;
+    border-radius: 5px;
     box-shadow: 5px 5px 15px -5px rgba(0, 0, 0, 0.3);
   }
 
-  .dropbtn:focus{
-      outline: none;
-  }
-  
   /* The container <div> - needed to position the dropdown content */
   .dropdown {
     position: relative;
@@ -82,6 +99,10 @@ header{
       border: solid 1px #565466;
       width: 55px;
       margin: auto;
+  }
+
+  hr:last-of-type{
+      border: none;
   }
   
   /* Change color of dropdown links on hover */
@@ -137,10 +158,6 @@ header{
     cursor: pointer;
 }
 
-.delete button:focus, .add button:focus{
-    outline: none;
-}
-
 .add .button-show{
     display: none;
 }
@@ -152,10 +169,6 @@ header{
     width: 150px;
     padding: 2px;
     font-size: 1.5rem;
-}
-
-.add input:focus{
-    outline: none;
 }
 
 
@@ -234,7 +247,6 @@ header{
 }
 
 .add-item-input input:focus{
-    outline: none;
     border-bottom: solid 2px #8785a2;
 }
 
@@ -255,9 +267,6 @@ header{
     background-color: #b4b2d8;
 }
 
-.add-item-input button:focus{
-    outline: none;
-}
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
