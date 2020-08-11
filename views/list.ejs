@@ -3,19 +3,21 @@
 <body style="background-image: url(/images/<%=bgimg%>.png)">
 
     <header>
-        <h1 class="quote">"What you can measure you can control"</h1>
+        <h1 class="quote">"Hi!"</h1>
     
         <div class="dropdown">
             <button class="dropbtn">Lists</button>
             <div class="dropdown-content">
-                <a href="/main">Today</a>
                 <% lists.forEach(list => { %>
-                    <hr class="border-bottom-hr">
-                    <a href="/user/<%= userId %>/lists/<%= list._id %>"><%= list.name %></a>                    
+                    <a href="/user/<%= userId %>/lists/<%= list._id %>"><%= list.name %></a>
+                    <hr class="border-bottom-hr">                    
                 <% }); %>
-
             </div>
         </div>
+
+        <form action="/logout" method="post">
+            <button class="logout-btn" type="submit"><i class="fas fa-sign-out-alt"></i></button>
+        </form>
     </header>
 
 

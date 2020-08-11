@@ -3,6 +3,7 @@ const ejs = require("ejs");
 const mongoose = require("mongoose")
 const bodyParser = require("body-parser");
 const _ = require("lodash");
+const bcrypt = require("bcrypt");
 
 const app = express();
 
@@ -13,8 +14,9 @@ app.use(express.static(__dirname + "/public"));
 
 mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false});
 
-const options = {month: "long", day: "numeric"}
-const day = new Date().toLocaleDateString("en-US", options)
+const options = {month: "long", day: "numeric"};
+const day = new Date().toLocaleDateString("en-US", options);
+const saltRounds = 10;
 const images = 25;
 
 const itemsSchema = {
@@ -76,9 +78,14 @@ app.post("/login", function(req, res){
 
     User.findOne({email: email}, function(err, foundUser){
         if(!err){
-            if(foundUser.password === password){
-                res.redirect("/user/login/" + foundUser._id);
-            }
+
+            bcrypt.compare(password, foundUser.password, function(err, result){
+                if(!err){
+                    res.redirect("/user/login/" + foundUser._id);
+                }else{
+                    console.log(err)
+                }
+            })
         }else{
             console.log(err)
         }
@@ -95,18 +102,19 @@ app.post("/register", function(req, res){
         items: defaultItems
     })
 
-    const newUser = new User({
-        email: email,
-        password: password,
-        lists: newList
-    });
-
-    newUser.save(function(err){
+    bcrypt.hash(password, saltRounds, function(err, hash){
         if(!err){
+            const newUser = new User({
+                email: email,
+                password: hash,
+                lists: newList
+            });
+            newUser.save();
             res.redirect("/user/register/" + newUser._id);
         }else{
-            console.log(err)
+            console.log(err);
         }
+
     })
 })
 
