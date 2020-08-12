@@ -17,6 +17,12 @@ app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static(__dirname + "/public"));
+app.use(session({
+    secret: "This is my little secret",
+    resave: false,
+    saveUninitialized: false,
+    store: new MongoStore({mongooseConnection: mongoose.connection, ttl: 90*24*60*60})
+}))
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -24,12 +30,7 @@ app.use(passport.session());
 mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false});
 mongoose.set("useCreateIndex", true);
 
-app.use(session({
-    secret: "This is my little secret",
-    resave: false,
-    saveUninitialized: false,
-    store: new MongoStore({mongooseConnection: mongoose.connection, ttl: 90*24*60*60})
-}))
+
 
 const options = {month: "long", day: "numeric"}
 const day = new Date().toLocaleDateString("en-US", options)
@@ -165,11 +166,8 @@ app.post("/register", function(req, res){
 
 //Load default items for registered user
 app.get("/user/register/:userId", function(req, res){
-    console.log("llego hasta aqui")
-    console.log(req.isAuthenticated())
-    if(req.isAuthenticated()){
-        const userId = req.params.userId;
-
+    const userId = req.params.userId;
+    if(req.isAuthenticated() && (JSON.stringify(req.user._id) === `"${userId}"`)){
         User.findById(userId, function(err, foundUser){
             if(!err){
 
@@ -192,10 +190,9 @@ app.get("/user/register/:userId", function(req, res){
 })
 
 //Load items for logim user
-app.get("/user/login/:userId", function(req, res){
-    if(req.isAuthenticated()){
-        const userId = req.params.userId;
-
+app.get("/user/login/:userId", function(req, res){    
+    const userId = req.params.userId;
+    if(req.isAuthenticated() && (JSON.stringify(req.user._id) === `"${userId}"`)){
         User.findById(userId, function(err, foundUser){
             if(!err){
                 if(foundUser.lists[0].items === undefined){
@@ -352,8 +349,12 @@ app.post("/deleteList", function(req, res){
 
 app.post("/logout", function(req, res){
     req.logout();
+    req.session.destroy(function(err){
+        if(err){
+            console.log(err);
+        }
+    })
     res.redirect("/")
-    console.log(req.isAuthenticated())
 })
 
 
