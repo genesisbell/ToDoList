@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const ejs = require("ejs");
 const mongoose = require("mongoose")
@@ -7,6 +8,8 @@ const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 const MongoStore = require("connect-mongo")(session);
+//const GoogleStrategy = require('passport-google-oauth20').Strategy; ////
+//const findOrCreate = require("mongoose-findorcreate"); ////
 
 const app = express();
 
@@ -14,18 +17,19 @@ app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static(__dirname + "/public"));
-app.use(session({
-    secret: "This is my little secret",
-    resave: false,
-    saveUninitialized: false,
-    store: new MongoStore({mongooseConnection: mongoose.connection, ttl: 90*24*60*60})
-}))
 
 app.use(passport.initialize());
 app.use(passport.session());
 
 mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false});
 mongoose.set("useCreateIndex", true);
+
+app.use(session({
+    secret: "This is my little secret",
+    resave: false,
+    saveUninitialized: false,
+    store: new MongoStore({mongooseConnection: mongoose.connection, ttl: 90*24*60*60})
+}))
 
 const options = {month: "long", day: "numeric"}
 const day = new Date().toLocaleDateString("en-US", options)
@@ -48,6 +52,7 @@ const usersSchema =  new mongoose.Schema({
 });
 
 usersSchema.plugin(passportLocalMongoose, {usernameField: "email"});
+//usersSchema.plugin(findOrCreate); ///
 
 const User = mongoose.model("User", usersSchema);
 const Item = mongoose.model("Item", itemsSchema);
@@ -57,22 +62,36 @@ passport.use(User.createStrategy());
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
+////////
+// passport.use(new GoogleStrategy({
+//     clientID: process.env.CLIENT_ID,
+//     clientSecret: process.env.CLIENT_SECRET,
+//     callbackURL: "http://localhost:3000/auth/google",
+//     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
+//   },
+//   function(accessToken, refreshToken, profile, cb) {
+//     User.findOrCreate({ googleId: profile.id }, function (err, user) {
+//       return cb(err, user);
+//     });
+//   }
+// ));
+
 /* --------------- Inicial Items ------------------------- */
 const item1 = new Item({
     name: "Welcome to your To Do list!"
-})
+});
 const item2 = new Item({
     name: "Hit the top plus button to add a list"
-})
+});
 const item3 = new Item({
     name: "And the trash can button to remove a list"
-})
+});
 const item4 = new Item({
     name: "<-- Here to remove an item"
-})
+});
 const item5 = new Item({
     name: "Enjoy 😀"
-})
+});
 
 const defaultItems = [item1, item2, item3, item4, item5];
 /* --------------- Inicial Items ------------------------- */
@@ -129,6 +148,7 @@ app.post("/register", function(req, res){
     User.register({email: email, lists: newList}, password, function(err, user){
         if(!err){
             passport.authenticate("local")(req, res, function(){
+                console.log(req.isAuthenticated())
                 res.redirect("/user/register/" + user._id);
             })
         }else{
@@ -139,27 +159,32 @@ app.post("/register", function(req, res){
 
 })
 
+//Register with Google //////
+//app.get("/auth/google", passport.authenticate("google", {scope: ["profile"]}));
+
 
 //Load default items for registered user
 app.get("/user/register/:userId", function(req, res){
+    console.log("llego hasta aqui")
+    console.log(req.isAuthenticated())
     if(req.isAuthenticated()){
         const userId = req.params.userId;
 
-    User.findById(userId, function(err, foundUser){
-        if(!err){
+        User.findById(userId, function(err, foundUser){
+            if(!err){
 
-            res.render("list", {
-                userId : foundUser._id,
-                listTitle : day, 
-                items: foundUser.lists[0].items, 
-                lists: foundUser.lists, 
-                listId : foundUser.lists[0]._id,
-                bgimg : 1
-            });
+                res.render("list", {
+                    userId : foundUser._id,
+                    listTitle : day, 
+                    items: foundUser.lists[0].items, 
+                    lists: foundUser.lists, 
+                    listId : foundUser.lists[0]._id,
+                    bgimg : 1
+                });
 
-        }else{
-            console.log(err);
-        }
+            }else{
+                console.log(err);
+            }
     })
     }else{
         res.redirect("/")
