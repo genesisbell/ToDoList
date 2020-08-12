@@ -3,6 +3,9 @@ const ejs = require("ejs");
 const mongoose = require("mongoose")
 const bodyParser = require("body-parser");
 const _ = require("lodash");
+const session = require("express-session");
+const passport = require("passport");
+const passportLocalMongoose = require("passport-local-mongoose");
 
 const app = express();
 
@@ -10,32 +13,47 @@ app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static(__dirname + "/public"));
+app.use(session({
+    secret: "This is my little secret",
+    resave: false,
+    saveUninitialized: false
+}))
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false});
+mongoose.set("useCreateIndex", true);
 
 const options = {month: "long", day: "numeric"}
 const day = new Date().toLocaleDateString("en-US", options)
 const images = 25;
 
-const itemsSchema = {
+const itemsSchema = new mongoose.Schema({
     name: String
-}
+});
 
-const listsSchema = {
+const listsSchema =  new mongoose.Schema({
     name: String,
     items: [itemsSchema],
     bgimg: Number
-}
+});
 
-const usersSchema = {
+const usersSchema =  new mongoose.Schema({
     email: String,
     password: String,
     lists: [listsSchema]
-}
+});
+
+usersSchema.plugin(passportLocalMongoose, {usernameField: "email"});
 
 const User = mongoose.model("User", usersSchema);
 const Item = mongoose.model("Item", itemsSchema);
 const List = mongoose.model("List", listsSchema);
+
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 /* --------------- Inicial Items ------------------------- */
 const item1 = new Item({
@@ -58,7 +76,11 @@ const defaultItems = [item1, item2, item3, item4, item5];
 /* --------------- Inicial Items ------------------------- */
 
 app.get("/", function(req, res){
-    res.render("home")
+    if(req.isAuthenticated()){
+        res.redirect("/login")
+    }else{
+        res.render("home")
+    }
 })
 
 app.get("/login", function(req, res){
@@ -95,19 +117,30 @@ app.post("/register", function(req, res){
         items: defaultItems
     })
 
-    const newUser = new User({
-        email: email,
-        password: password,
-        lists: newList
-    });
+    // const newUser = new User({
+    //     email: email,
+    //     password: password,
+    //     lists: newList
+    // });
 
-    newUser.save(function(err){
+    User.register({email: email, lists: newList}, password, function(err, user){
         if(!err){
-            res.redirect("/user/register/" + newUser._id);
+            passport.authenticate("local")(req, res, function(){
+                res.redirect("/user/register/" + user._id);
+            })
         }else{
             console.log(err)
+            res.redirect("/register");
         }
     })
+
+    // newUser.save(function(err){
+    //     if(!err){
+    //         res.redirect("/user/register/" + newUser._id);
+    //     }else{
+    //         console.log(err)
+    //     }
+    // })
 })
 
 
