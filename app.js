@@ -93,18 +93,39 @@ app.get("/register", function(req, res){
 
 //Login user
 app.post("/login", function(req, res){
-   const email = req.body.email;
-   const password = req.body.password;
+    const email = req.body.email;
+    const password = req.body.password;
 
-    User.findOne({email: email}, function(err, foundUser){
+    const user = new User({
+        email: email,
+        password: password
+    })
+
+    req.login(user, function(err){
         if(!err){
-            if(foundUser.password === password){
-                res.redirect("/user/login/" + foundUser._id);
-            }
+            passport.authenticate("local")(req, res, function(){
+                res.redirect("/user/login/" + req.user._id);
+            })
         }else{
-            console.log(err)
+            console.log(err);
+            res.redirect("/");
         }
     })
+
+
+
+//    const email = req.body.email;
+//    const password = req.body.password;
+
+//     User.findOne({email: email}, function(err, foundUser){
+//         if(!err){
+//             if(foundUser.password === password){
+//                 res.redirect("/user/login/" + foundUser._id);
+//             }
+//         }else{
+//             console.log(err)
+//         }
+//     })
 })
 
 //Register User
@@ -218,7 +239,7 @@ app.post("/addItem", function(req, res){
 
 //Delete item
 app.post("/deleteItem", function(req, res){
-    const idItem = req.body.checkbox
+    const idItem = req.body.checkbox;
     const listId = req.body.listIdDeleteItem;
     const userId = req.body.userIdDeleteItem;
 
@@ -300,6 +321,11 @@ app.post("/deleteList", function(req, res){
         }
     })
 
+})
+
+app.post("/logout", function(req, res){
+    req.logout();
+    res.redirect("/")
 })
 
 
