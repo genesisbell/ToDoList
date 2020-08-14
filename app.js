@@ -8,8 +8,8 @@ const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 const MongoStore = require("connect-mongo")(session);
-//const GoogleStrategy = require('passport-google-oauth20').Strategy; ////
-//const findOrCreate = require("mongoose-findorcreate"); ////
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const findOrCreate = require("mongoose-findorcreate");
 
 const app = express();
 
@@ -30,11 +30,9 @@ app.use(passport.session());
 mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false});
 mongoose.set("useCreateIndex", true);
 
-
-
 const options = {month: "long", day: "numeric"}
 const day = new Date().toLocaleDateString("en-US", options)
-const images = 25;
+const images = 24;
 
 const itemsSchema = new mongoose.Schema({
     name: String
@@ -47,35 +45,46 @@ const listsSchema =  new mongoose.Schema({
 });
 
 const usersSchema =  new mongoose.Schema({
+    name: String,
     email: String,
     password: String,
-    lists: [listsSchema]
+    lists: [listsSchema],
+    googleId: String
 });
 
 usersSchema.plugin(passportLocalMongoose, {usernameField: "email"});
-//usersSchema.plugin(findOrCreate); ///
+usersSchema.plugin(findOrCreate); ///
 
 const User = mongoose.model("User", usersSchema);
 const Item = mongoose.model("Item", itemsSchema);
 const List = mongoose.model("List", listsSchema);
 
 passport.use(User.createStrategy());
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+passport.serializeUser(function(user, done) {
+    done(null, user.id);
+  });
+  
+passport.deserializeUser(function(id, done) {
+    User.findById(id, function(err, user) {
+      done(err, user);
+    });
+});
 
 ////////
-// passport.use(new GoogleStrategy({
-//     clientID: process.env.CLIENT_ID,
-//     clientSecret: process.env.CLIENT_SECRET,
-//     callbackURL: "http://localhost:3000/auth/google",
-//     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
-//   },
-//   function(accessToken, refreshToken, profile, cb) {
-//     User.findOrCreate({ googleId: profile.id }, function (err, user) {
-//       return cb(err, user);
-//     });
-//   }
-// ));
+passport.use(new GoogleStrategy({
+    clientID: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/google/todolist",
+    userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
+  },
+  function(accessToken, refreshToken, profile, cb) {
+
+    console.log(profile);
+    User.findOrCreate({ googleId: profile.id, name: profile.name.givenName}, function (err, user) {
+      return cb(err, user);
+    });
+  }
+));
 
 /* --------------- Inicial Items ------------------------- */
 const item1 = new Item({
@@ -138,18 +147,19 @@ app.post("/login", function(req, res){
 
 //Register User
 app.post("/register", function(req, res){
+    const name = _.capitalize(req.body.name);
     const email = req.body.email;
     const password = req.body.password;
 
     const newList = new List({
+        _id: mongoose.Types.ObjectId("000000000000000000000000"),
         name: day,
         items: defaultItems
-    })
+    });
 
-    User.register({email: email, lists: newList}, password, function(err, user){
+    User.register({name: name, email: email, lists: newList}, password, function(err, user){
         if(!err){
             passport.authenticate("local")(req, res, function(){
-                console.log(req.isAuthenticated())
                 res.redirect("/user/register/" + user._id);
             })
         }else{
@@ -161,8 +171,24 @@ app.post("/register", function(req, res){
 })
 
 //Register with Google //////
-//app.get("/auth/google", passport.authenticate("google", {scope: ["profile"]}));
+app.get("/auth/google", passport.authenticate("google", {scope: ["profile"]}));
 
+app.get("/auth/google/todolist", passport.authenticate("google" , {failureRedirect: "/login"}),
+function(req, res){
+    User.findByIdAndUpdate(req.user._id, {$push: {lists: {_id: mongoose.Types.ObjectId("000000000000000000000000"), 
+                                                            name: day, 
+                                                            items: defaultItems, 
+                                                            bgimg: 1}}}, 
+    function(err, foundUser){
+        if(!err){
+            console.log("succesfully added default list");
+        }else{
+            console.log(err)
+        }
+    });
+
+    res.redirect("/user/login/" + req.user._id);
+});
 
 //Load default items for registered user
 app.get("/user/register/:userId", function(req, res){
@@ -172,6 +198,7 @@ app.get("/user/register/:userId", function(req, res){
             if(!err){
 
                 res.render("list", {
+                    name: foundUser.name,
                     userId : foundUser._id,
                     listTitle : day, 
                     items: foundUser.lists[0].items, 
@@ -183,7 +210,7 @@ app.get("/user/register/:userId", function(req, res){
             }else{
                 console.log(err);
             }
-    })
+        })
     }else{
         res.redirect("/")
     }
@@ -199,6 +226,7 @@ app.get("/user/login/:userId", function(req, res){
                     foundUser.lists[0].items = [];
 
                     res.render("list", {
+                        name: foundUser.name,
                         userId : foundUser._id,
                         listTitle : day, 
                         items: foundUser.lists[0].items,
@@ -208,6 +236,7 @@ app.get("/user/login/:userId", function(req, res){
                     }) 
                 }else{
                     res.render("list", {
+                        name: foundUser.name,
                         userId : foundUser._id,
                         listTitle : day, 
                         items: foundUser.lists[0].items,
@@ -304,6 +333,7 @@ app.get("/user/:userId/lists/:listId", function(req, res){
                 User.findById(userId, {lists: {$elemMatch: {_id: listId}}}, function(err, foundUserList){
                     if(!err){        
                         res.render("list", {
+                            name: foundUser.name,
                             userId : foundUserList._id,
                             listTitle : foundUserList.lists[0].name, 
                             items: foundUserList.lists[0].items,
@@ -333,14 +363,21 @@ app.post("/deleteList", function(req, res){
         const userId = req.body.userIdDeleteList;
         const listId = req.body.deleteListBtn;
     
-        User.findByIdAndUpdate(userId, {$pull: {lists: {_id: listId}}}, function(err, foundUser){
-            if(!err){
-                console.log("Succesfully deleted list!");
-                res.redirect("/user/login/" + foundUser._id);
-            }else{
-                console.log(err)
-            }
-        })
+        if(listId === "000000000000000000000000"){
+            console.log("You can not delete main list!");
+            res.redirect("/user/login/" + userId);
+    
+        }else{
+            User.findByIdAndUpdate(userId, {$pull: {lists: {_id: listId}}}, function(err, foundUser){
+                if(!err){
+                    console.log("Succesfully deleted list!");
+                    res.redirect("/user/login/" + foundUser._id);
+                }else{
+                    console.log(err)
+                }
+            })
+        }
+
     }else{
         res.redirect("/");
     }
