@@ -27,7 +27,8 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false});
+//mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false});
+mongoose.connect(`mongodb+srv://admin-genesis:${process.env.DB_PASSWORD}@cluster0.vnfjt.mongodb.net/todolistDB`, {useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false});
 mongoose.set("useCreateIndex", true);
 
 const options = {month: "long", day: "numeric"}
