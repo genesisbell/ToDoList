@@ -6,6 +6,7 @@
     <div class="localsr">
         <form action="/register" method="POST">
     
+            <input type="Text" name="name" id="" placeholder="Enter your first name">
             <input type="email" name="email" id="" placeholder="Enter your email">
             
             <input type="password" name="password" id="" placeholder="Enter your password">
@@ -15,8 +16,11 @@
     </div>
 
     <div class="gfsr">
-        <p>google sign in</p>
-        <p>facebook sign in</p>
+        <div class="btn">
+            <a class="btn-social btn-google" href="/auth/google" role="button">
+                <i class="fab fa-google"></i> Register with Google
+            </a>
+        </div>
 
     </div>
     
