@@ -34,6 +34,7 @@ mongoose.set("useCreateIndex", true);
 const options = {month: "long", day: "numeric"}
 const day = new Date().toLocaleDateString("en-US", options)
 const images = 23;
+let port = process.env.PORT;
 
 const itemsSchema = new mongoose.Schema({
     name: String
@@ -398,5 +399,7 @@ app.post("/logout", function(req, res){
     res.redirect("/")
 })
 
-
-app.listen("3000", () => console.log("Server open on port 3000"))
+if (port == null || port == "") {
+  port = 8000;
+}
+app.listen(port, () => console.log(`Server open on port ${port}`));
