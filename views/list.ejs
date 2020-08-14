@@ -3,42 +3,18 @@
 <body style="background-image: url(/images/<%=bgimg%>.png)">
 
     <header>
-<<<<<<< HEAD
-
-
-
-        <h1 class="quote">Hi Genesis!</h1>
-=======
         <h1 class="quote">Hi <%= name %>! </h1>
->>>>>>> login-passport-branch
     
         <div class="dropdown">
             <button class="dropbtn">Lists</button>
             <div class="dropdown-content">
                 <% lists.forEach(list => { %>
-<<<<<<< HEAD
-                    <a href="/user/<%= userId %>/lists/<%= list._id %>"><%= list.name %></a>
-=======
                     <a href="/user/<%= userId %>/lists/<%= list._id %>"><%= list.name %></a>                    
->>>>>>> login-passport-branch
                     <hr class="border-bottom-hr">
                 <% }); %>
 
             </div>
         </div>
-<<<<<<< HEAD
-
-        <form action="/logout" method="post">
-            <button class="logout-btn" type="submit"><i class="fas fa-sign-out-alt"></i></button>
-        </form>
-    </header>
-
-
-<li name="userId"><%= userId %></li>
-<li name="listId"><%= listId %></li>
-
-=======
->>>>>>> login-passport-branch
 
         <form action="/logout" method="post">
             <button class="logout-btn" type="submit"><i class="fas fa-sign-out-alt"></i></button>

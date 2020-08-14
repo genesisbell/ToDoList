@@ -27,21 +27,12 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(session({
-    secret: "This is my little little secret.",
-    resave: false,
-    saveUninitialized: true,
-}));
-
-app.use(passport.initialize());
-app.use(passport.session());
-
 mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false});
 mongoose.set("useCreateIndex", true);
 
 const options = {month: "long", day: "numeric"}
 const day = new Date().toLocaleDateString("en-US", options)
-const images = 24;
+const images = 23;
 
 const itemsSchema = new mongoose.Schema({
     name: String
@@ -62,15 +53,11 @@ const usersSchema =  new mongoose.Schema({
 });
 
 usersSchema.plugin(passportLocalMongoose, {usernameField: "email"});
-usersSchema.plugin(findOrCreate); ///
+usersSchema.plugin(findOrCreate);
 
 const Item = mongoose.model("Item", itemsSchema);
 const List = mongoose.model("List", listsSchema);
 const User = mongoose.model("User", usersSchema);
-
-passport.use(new LocalStrategy(User.authenticate())); ////
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
 
 passport.use(User.createStrategy());
 passport.serializeUser(function(user, done) {
@@ -91,15 +78,13 @@ passport.use(new GoogleStrategy({
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
   },
   function(accessToken, refreshToken, profile, cb) {
-
-    console.log(profile);
     User.findOrCreate({ googleId: profile.id, name: profile.name.givenName}, function (err, user) {
       return cb(err, user);
     });
   }
 ));
 
-/* --------------- Inicial Items ------------------------- */
+/* --------------- Inicial List ------------------------- */
 const item1 = new Item({
     name: "Welcome to your To Do list!"
 });
@@ -117,7 +102,14 @@ const item5 = new Item({
 });
 
 const defaultItems = [item1, item2, item3, item4, item5];
-/* --------------- Inicial Items ------------------------- */
+
+const inicialList = new List({
+    _id: mongoose.Types.ObjectId("000000000000000000000000"),
+    name: day,
+    items: defaultItems,
+    bgimg: 1
+});
+/* --------------- Inicial List ------------------------- */
 
 app.get("/", function(req, res){
     if(req.isAuthenticated()){
@@ -164,13 +156,7 @@ app.post("/register", function(req, res){
     const email = req.body.email;
     const password = req.body.password;
 
-    const newList = new List({
-        _id: mongoose.Types.ObjectId("000000000000000000000000"),
-        name: day,
-        items: defaultItems
-    });
-
-    User.register({name: name, email: email, lists: newList}, password, function(err, user){
+    User.register({name: name, email: email, lists: inicialList}, password, function(err, user){
         if(!err){
             passport.authenticate("local")(req, res, function(){
                 res.redirect("/user/register/" + user._id);
@@ -188,19 +174,21 @@ app.get("/auth/google", passport.authenticate("google", {scope: ["profile"]}));
 
 app.get("/auth/google/todolist", passport.authenticate("google" , {failureRedirect: "/login"}),
 function(req, res){
-    User.findByIdAndUpdate(req.user._id, {$push: {lists: {_id: mongoose.Types.ObjectId("000000000000000000000000"), 
-                                                            name: day, 
-                                                            items: defaultItems, 
-                                                            bgimg: 1}}}, 
-    function(err, foundUser){
-        if(!err){
-            console.log("succesfully added default list");
-        }else{
-            console.log(err)
-        }
-    });
 
-    res.redirect("/user/login/" + req.user._id);
+    User.findById(req.user._id, function(err, foundUserList){
+        if(foundUserList.lists.length > 0){
+            res.redirect("/user/login/" + req.user._id);
+        }else{
+            User.findByIdAndUpdate(req.user._id, {$push: {lists: inicialList}}, 
+            function(err, foundUser){
+                if(!err){
+                  res.redirect("/user/login/" + req.user._id);
+                }else{
+                    console.log(err)
+                }
+            });
+        }
+    })    
 });
 
 //Load default items for registered user
